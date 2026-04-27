@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Albania Payslip Calculator · Wizz Air</title>
+<meta name="description" content="Calcolatore busta paga per piloti Wizz Air Malta – Branch Albania">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wizz-magenta:#C8006B;
+  --wizz-purple:#702082;
+  --wizz-ink:#1A0B24;
+  --bg:#FAF7FA;
+  --card:#FFFFFF;
+  --border:#E8DFE8;
+  --border-strong:#C9B8CC;
+  --muted:#6B5A70;
+  --ok:#0E8A5F;
+  --warn:#B85300;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  color:var(--wizz-ink);
+  font-size:14px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(200,0,107,0.04) 0%, transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(112,32,130,0.04) 0%, transparent 40%);
+  background-attachment:fixed;
+}
+.serif{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-weight:600;letter-spacing:-0.02em}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+/* Header */
+header{
+  background:linear-gradient(135deg,var(--wizz-purple) 0%,var(--wizz-magenta) 100%);
+  color:white;
+  padding:28px 24px 22px;
+  position:sticky;top:0;z-index:10;
+  box-shadow:0 1px 0 rgba(0,0,0,0.08);
+  transition:padding 0.2s ease;
+}
+header .wrap{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+header h1{margin:0;font-size:28px;line-height:1;font-weight:400}
+header h1 .tag{font-family:'Inter';font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;opacity:0.85;display:block;margin-bottom:6px}
+header .month-picker{display:flex;gap:8px;align-items:center;background:rgba(255,255,255,0.12);padding:8px 12px;border-radius:10px;backdrop-filter:blur(8px)}
+header .month-picker label{font-size:11px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;opacity:0.9}
+header select{
+  background:white;color:var(--wizz-ink);border:1px solid rgba(0,0,0,0.08);padding:8px 12px;border-radius:6px;
+  font-family:'Inter';font-size:14px;font-weight:500;cursor:pointer;
+  -webkit-appearance:menulist;appearance:menulist;
+  min-height:40px;
+}
+header select:focus{outline:2px solid white;outline-offset:2px}
+header input[type="number"]{
+  background:white;color:var(--wizz-ink);border:none;padding:8px 6px;border-radius:6px;
+  font-family:'JetBrains Mono';font-size:15px;font-weight:600;width:46px;text-align:center;
+  min-height:40px;
+  -moz-appearance:textfield;
+}
+header input[type="number"]::-webkit-outer-spin-button,
+header input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+header input[type="number"]:focus{outline:2px solid white;outline-offset:2px}
+header button{
+  background:rgba(255,255,255,0.22);color:white;border:none;padding:8px 12px;border-radius:6px;
+  font-size:16px;cursor:pointer;font-family:inherit;line-height:1;
+  transition:background 0.15s;min-height:40px;min-width:40px;
+}
+header button:hover,header button:active{background:rgba(255,255,255,0.35)}
+header .wd-overridden input{background:#FFF4D6;color:var(--warn);border:2px solid #FFD966}
+
+/* Mobile: stack header vertically and make controls big enough to tap */
+@media (max-width:640px){
+  header{padding:18px 16px 16px}
+  header .wrap{flex-direction:column;align-items:stretch;gap:14px}
+  header h1{font-size:24px}
+  header .month-picker{
+    display:grid;
+    grid-template-columns:auto auto auto 1fr;
+    column-gap:10px;
+    row-gap:12px;
+    align-items:center;
+    padding:12px 14px;
+  }
+  /* Row 1: "Mese" label + select (full width) */
+  header .month-picker > label[for="month"]{grid-column:1;grid-row:1;white-space:nowrap}
+  header .month-picker > #month{grid-column:2 / -1;grid-row:1;width:100%}
+  /* Row 2: "Workdays" label + input + reset button (left-aligned, with trailing empty space) */
+  header .month-picker > label[for="wd-input"]{grid-column:1;grid-row:2;white-space:nowrap}
+  header .month-picker > #wd-input{grid-column:2;grid-row:2}
+  header .month-picker > #wd-reset{grid-column:3;grid-row:2}
+
+  header select{
+    font-size:16px;  /* prevent zoom on focus */
+    padding:12px 14px;
+    min-height:48px;
+  }
+  header input[type="number"]{
+    font-size:16px;  /* prevent zoom on focus */
+    min-height:48px;
+    width:54px;
+    padding:8px 6px;
+  }
+  header button{
+    min-height:48px;min-width:48px;
+    font-size:20px;
+  }
+
+  /* Compact header when scrolled: hide title, keep only picker */
+  body.scrolled header{padding-top:10px;padding-bottom:10px}
+  body.scrolled header h1{display:none}
+  body.scrolled header .wrap{gap:0}
+}
+
+/* Mobile: larger touch targets inside cards */
+@media (max-width:640px){
+  body{font-size:15px}
+  .field input[type="text"],.field input[type="number"],.field input[type="date"],.field select{
+    font-size:16px;padding:10px 12px;min-height:44px;
+  }
+  .var-row{grid-template-columns:1fr 60px 68px 80px;gap:6px;font-size:13px}
+  .var-row input[type="number"]{font-size:16px;padding:8px 6px;min-height:40px}
+  .card{padding:16px}
+}
+
+/* Layout */
+.container{max-width:1280px;margin:0 auto;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:900px){.container{grid-template-columns:1fr;padding:14px;gap:14px}}
+
+/* Card */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:0 1px 2px rgba(26,11,36,0.03)}
+.card h2{margin:0 0 14px;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--wizz-purple);display:flex;align-items:center;gap:8px}
+.card h2 .num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--wizz-magenta);color:white;font-size:11px;font-weight:700}
+.card h3{margin:18px 0 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)}
+
+/* Fields */
+.field{display:grid;grid-template-columns:1fr 140px;align-items:center;gap:12px;padding:7px 0;border-bottom:1px dashed var(--border)}
+.field:last-child{border-bottom:none}
+.field label{font-size:13px;color:var(--wizz-ink)}
+.field label .sub{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:1px}
+.field input[type="text"],.field input[type="number"],.field input[type="date"],.field select{
+  width:100%;padding:7px 10px;border:1px solid var(--border-strong);border-radius:6px;
+  font-family:'JetBrains Mono';font-size:13px;background:white;
+  text-align:right;color:var(--wizz-magenta);font-weight:500;
+}
+.field select{font-family:'Inter';color:var(--wizz-ink);text-align:left}
+.field input:focus,.field select:focus{outline:2px solid var(--wizz-magenta);outline-offset:1px;border-color:var(--wizz-magenta)}
+.field .checkbox-wrap{display:flex;justify-content:flex-end}
+.field input[type="checkbox"]{width:18px;height:18px;accent-color:var(--wizz-magenta);cursor:pointer}
+
+/* Variable items - 4-col layout */
+.var-row{display:grid;grid-template-columns:1fr 70px 80px 90px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border);font-size:12.5px}
+.var-row.header{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;padding-bottom:6px;border-bottom:1px solid var(--border-strong)}
+.var-row .rate{font-family:'JetBrains Mono';color:var(--muted);text-align:right;font-size:11.5px}
+.var-row input[type="number"]{width:100%;padding:5px 7px;border:1px solid var(--border-strong);border-radius:5px;font-family:'JetBrains Mono';font-size:12px;text-align:right;color:var(--wizz-magenta);font-weight:500;background:white}
+.var-row input[type="number"]:disabled{background:#F4EEF4;color:var(--muted);cursor:not-allowed;opacity:0.7}
+.var-row input:focus{outline:2px solid var(--wizz-magenta);outline-offset:1px;border-color:var(--wizz-magenta)}
+.var-row .amount{font-family:'JetBrains Mono';text-align:right;color:var(--wizz-ink);font-weight:500;font-size:12px}
+.var-row.subtotal{font-weight:600;color:var(--wizz-purple);border-top:1px solid var(--border-strong);border-bottom:1px solid var(--border-strong);padding:8px 0;margin:4px 0}
+
+/* Output card */
+.output{background:linear-gradient(180deg,#fff 0%,#FDF8FB 100%);border:1px solid var(--border-strong)}
+.output .row{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px}
+.output .row:last-child{border-bottom:none}
+.output .row .val{font-family:'JetBrains Mono';font-weight:500;font-size:14px}
+.output .row.neg .val{color:var(--warn)}
+.output .row.total{background:var(--wizz-ink);color:white;padding:14px 16px;border-radius:10px;margin-top:10px;border-bottom:none}
+.output .row.total .label{font-weight:600;text-transform:uppercase;letter-spacing:0.08em;font-size:11px;opacity:0.85}
+.output .row.total .val{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:32px;font-weight:700;line-height:1;letter-spacing:-0.02em}
+.output .row.total .val .cur{font-family:'Inter';font-size:14px;font-weight:400;opacity:0.7;margin-left:4px}
+
+.output .row.gross{background:linear-gradient(135deg,var(--wizz-magenta) 0%,var(--wizz-purple) 100%);color:white;padding:14px 16px;border-radius:10px;margin:10px 0 6px;border-bottom:none}
+.output .row.gross .label{font-weight:600;text-transform:uppercase;letter-spacing:0.08em;font-size:11px;opacity:0.85}
+.output .row.gross .val{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:26px;font-weight:700;line-height:1;letter-spacing:-0.02em}
+.output .row.gross .val .cur{font-family:'Inter';font-size:13px;opacity:0.7;margin-left:4px}
+
+.bond-card{margin-top:14px;padding:14px;background:#F6EEF4;border-radius:10px;border:1px solid #E4D5E2}
+.bond-card h3{margin:0 0 10px;color:var(--wizz-purple)}
+.bond-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;font-size:12.5px}
+.bond-grid .lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
+.bond-grid .v{font-family:'JetBrains Mono';font-weight:500}
+
+.footer-note{max-width:1280px;margin:10px auto 40px;padding:0 24px;font-size:11.5px;color:var(--muted);line-height:1.6}
+.footer-note strong{color:var(--warn)}
+
+/* Info panel (salary/payslip/queries) */
+.info-panel{
+  max-width:1280px;margin:10px auto 0;padding:0 20px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+}
+@media (max-width:900px){.info-panel{grid-template-columns:1fr;padding:0 14px;gap:12px}}
+.info-card{
+  background:white;border:1px solid var(--border);border-radius:12px;
+  padding:16px 18px;
+  box-shadow:0 1px 2px rgba(26,11,36,0.03);
+}
+.info-card h3{
+  margin:0 0 10px;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.12em;
+  color:var(--wizz-purple);
+  display:flex;align-items:center;gap:8px;
+}
+.info-card h3 .icon{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border-radius:6px;
+  background:linear-gradient(135deg,var(--wizz-purple),var(--wizz-magenta));
+  color:white;font-size:13px;
+}
+.info-card ul{margin:0;padding:0;list-style:none}
+.info-card li{
+  padding:6px 0;font-size:12.5px;line-height:1.5;color:var(--wizz-ink);
+  display:flex;gap:8px;
+}
+.info-card li::before{
+  content:"•";color:var(--wizz-magenta);font-weight:700;flex-shrink:0;
+}
+.info-card a{
+  color:var(--wizz-magenta);font-weight:600;text-decoration:none;
+  word-break:break-all;
+}
+.info-card a:hover{text-decoration:underline}
+.info-card .tag-mini{
+  display:inline-block;padding:1px 6px;background:#F6EEF4;color:var(--wizz-purple);
+  border-radius:4px;font-size:10px;font-weight:600;letter-spacing:0.03em;
+  margin-left:4px;
+}
+
+/* small helpers */
+.currency-switch{display:inline-flex;background:rgba(255,255,255,0.15);border-radius:6px;padding:2px;margin-left:6px}
+.currency-switch button{background:none;border:none;color:white;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter';opacity:0.7}
+.currency-switch button.active{background:white;color:var(--wizz-magenta);opacity:1}
+
+.pill{display:inline-block;padding:2px 8px;background:var(--wizz-purple);color:white;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-left:6px}
+
+.fx-row{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--muted)}
+.fx-row input{width:70px;padding:3px 6px;border:1px solid var(--border-strong);border-radius:4px;font-family:'JetBrains Mono';font-size:11px;text-align:right;background:white}
+
+/* Help icon with tooltip */
+.help{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:16px;height:16px;border-radius:50%;
+  background:rgba(255,255,255,0.25);color:white;
+  font-size:10px;font-weight:700;font-family:'Inter',sans-serif;
+  cursor:help;user-select:none;margin-left:6px;vertical-align:middle;
+  border:none;padding:0;transition:background 0.15s;
+}
+.help:hover,.help:focus{background:rgba(255,255,255,0.45);outline:none}
+.help.dark{background:var(--border-strong);color:var(--wizz-ink)}
+.help.dark:hover,.help.dark:focus{background:var(--wizz-purple);color:white}
+
+/* Modal overlay for tooltip explanation */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(26,11,36,0.55);z-index:100;
+  display:none;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(3px);
+}
+.modal-backdrop.open{display:flex}
+.modal{
+  background:white;border-radius:14px;padding:22px 24px;max-width:440px;width:100%;
+  box-shadow:0 20px 60px rgba(26,11,36,0.3);
+  animation:modalIn 0.2s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+.modal h4{margin:0 0 10px;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--wizz-purple)}
+.modal p{margin:0 0 10px;font-size:13.5px;line-height:1.55;color:var(--wizz-ink)}
+.modal p:last-child{margin-bottom:0}
+.modal .close-btn{
+  background:var(--wizz-magenta);color:white;border:none;padding:9px 18px;
+  border-radius:6px;font-weight:600;cursor:pointer;font-family:inherit;
+  margin-top:14px;font-size:13px;
+}
+.modal .close-btn:hover{background:var(--wizz-purple)}
+
+/* Info banner for variable-items period */
+.info-banner{
+  background:#FFF4D6;border:1px solid #F5D87A;border-radius:8px;
+  padding:10px 14px;margin-bottom:14px;font-size:12.5px;line-height:1.5;
+  color:#6B4800;display:flex;gap:10px;align-items:flex-start;
+}
+.info-banner .icon{font-size:16px;flex-shrink:0;line-height:1.2}
+.info-banner strong{color:#4A3200}
+
+/* Training lock overlay on variable items */
+.training-lock{
+  position:relative;
+}
+.training-lock.locked > h3,
+.training-lock.locked > .var-row{
+  opacity:0.5;pointer-events:none;filter:grayscale(0.3);
+}
+.training-lock .lock-overlay{
+  display:none;
+  background:linear-gradient(135deg,rgba(112,32,130,0.06),rgba(200,0,107,0.06));
+  border:2px dashed var(--wizz-purple);border-radius:10px;
+  padding:14px 18px;margin:10px 0;
+  font-size:13px;color:var(--wizz-purple);font-weight:500;line-height:1.5;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.training-lock.locked .lock-overlay{display:flex}
+.training-lock:not(.locked) .lock-overlay{display:none}
+.training-lock .lock-overlay .icon{font-size:18px;line-height:1.2}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>
+      <span class="tag">Wizz Air Malta · Branch Albania</span>
+      <span class="serif">Payslip Calculator</span>
+    </h1>
+    <div class="month-picker">
+      <label for="month">Mese</label>
+      <select id="month"></select>
+      <label for="wd-input" style="margin-left:4px">Workdays <button type="button" class="help" id="help-workdays" aria-label="Info sui workdays">?</button></label>
+      <input type="number" id="wd-input" min="1" max="31" step="1">
+      <button id="wd-reset" title="Reset al calendario" type="button">↺</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- LEFT COLUMN: INPUTS -->
+  <div>
+    <!-- 1. Dati Pilota -->
+    <div class="card">
+      <h2><span class="num">1</span> Dati Pilota</h2>
+      <div class="field">
+        <label>Posizione</label>
+        <select id="position">
+          <option>Captain</option>
+          <option>Senior First Officer</option>
+          <option>First Officer</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Ore di volo totali <span class="sub">per seniority (solo CPT)</span></label>
+        <input type="number" id="hours" value="0" min="0" step="100">
+      </div>
+      <div class="field">
+        <label>Contratto</label>
+        <select id="contract">
+          <option>Training</option>
+          <option>Regolare</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Codice contratto <span class="sub">BOND type</span></label>
+        <select id="bondcode">
+          <option value="2023 TR">2023 TR</option>
+          <option value="2023 TR RAP">2023 TR RAP</option>
+          <option value="2023 CCQ">2023 CCQ</option>
+          <option value="2023 NTR">2023 NTR</option>
+          <option value="2023 NTR RAP">2023 NTR RAP</option>
+          <option value="2023 TR CDT">2023 TR CDT</option>
+          <option value="2023 INT CDT">2023 INT CDT</option>
+          <option value="2023 APS MCC">2023 APS MCC</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Flex Roster</label>
+        <div class="checkbox-wrap"><input type="checkbox" id="flex"></div>
+      </div>
+      <div class="field">
+        <label>FCR Date <span class="sub">rilascio in linea</span></label>
+        <input type="date" id="fcrdate" value="2026-02-12">
+      </div>
+    </div>
+
+    <!-- 2. Voci Variabili -->
+    <div class="card training-lock" id="variables-card" style="margin-top:20px">
+      <h2><span class="num">2</span> Voci Variabili <button type="button" class="help dark" id="help-period" aria-label="Info sul periodo di riferimento">?</button></h2>
+
+      <div class="info-banner">
+        <span class="icon">📅</span>
+        <div><strong>Periodo di riferimento:</strong> le voci variabili si riferiscono al periodo <strong>dal 21 del mese precedente al 20 del mese corrente</strong> — non al mese di calendario.</div>
+      </div>
+
+      <div class="lock-overlay">
+        <span class="icon">🔒</span>
+        <div><strong>Contratto Training attivo.</strong> I piloti in training non hanno diritto alle voci variabili (performance-related elements). Le quantità sono bloccate a 0. Cambia il contratto a <em>Regolare</em> per sbloccare.</div>
+      </div>
+
+      <h3>Pay per attività</h3>
+      <div class="var-row header"><div>Voce</div><div class="rate">Tariffa €</div><div>Qtà</div><div>Importo €</div></div>
+
+      <div class="var-row">
+        <div>📏 Distance Pay <span class="sub" style="font-size:10px;color:var(--muted)">€/km</span></div>
+        <div class="rate" id="r-dist">–</div>
+        <div><input type="number" id="q-dist" value="0" min="0" step="1"></div>
+        <div class="amount" id="a-dist">0.00</div>
+      </div>
+      <div class="var-row">
+        <div>🛬 Landing Pay <span class="sub" style="font-size:10px;color:var(--muted)">€/settore</span></div>
+        <div class="rate" id="r-land">–</div>
+        <div><input type="number" id="q-land" value="0" min="0" step="1"></div>
+        <div class="amount" id="a-land">0.00</div>
+      </div>
+      <div class="var-row">
+        <div>🩹 Sick days <span class="sub" style="font-size:10px;color:var(--muted)">pagati all'80%</span></div>
+        <div class="rate" id="r-sick">–</div>
+        <div><input type="number" id="q-sick" value="0" min="0" step="1"></div>
+        <div class="amount" id="a-sick">0.00</div>
+      </div>
+      <div class="var-row">
+        <div>🏖️ HP days</div>
+        <div class="rate" id="r-hp">–</div>
+        <div><input type="number" id="q-hp" value="0" min="0" step="1"></div>
+        <div class="amount" id="a-hp">0.00</div>
+      </div>
+
+      <h3>✈ Extra / Special Flying Duties</h3>
+      <div class="var-row header"><div>Codice</div><div class="rate">Tariffa €</div><div>Qtà</div><div>Importo €</div></div>
+
+      <div class="var-row"><div>AGRD <span class="sub" style="font-size:10px;color:var(--muted)">extend FDP on discretion</span></div><div class="rate" id="r-agrd">–</div><div><input type="number" id="q-agrd" value="0" min="0" step="1"></div><div class="amount" id="a-agrd">0.00</div></div>
+      <div class="var-row"><div>F-OFF <span class="sub" style="font-size:10px;color:var(--muted)">discretion from OFF/HP</span></div><div class="rate" id="r-foff">–</div><div><input type="number" id="q-foff" value="0" min="0" step="1"></div><div class="amount" id="a-foff">0.00</div></div>
+      <div class="var-row"><div>ENC-NEXT <span class="sub" style="font-size:10px;color:var(--muted)">encroaching next REST</span></div><div class="rate" id="r-encn">–</div><div><input type="number" id="q-encn" value="0" min="0" step="1"></div><div class="amount" id="a-encn">0.00</div></div>
+      <div class="var-row"><div>DISC-OFF <span class="sub" style="font-size:10px;color:var(--muted)">discretion flying from OFF</span></div><div class="rate" id="r-doff">–</div><div><input type="number" id="q-doff" value="0" min="0" step="1"></div><div class="amount" id="a-doff">0.00</div></div>
+      <div class="var-row"><div>ENC-OFF <span class="sub" style="font-size:10px;color:var(--muted)">encroaching from OFF</span></div><div class="rate" id="r-encoff">–</div><div><input type="number" id="q-encoff" value="0" min="0" step="1"></div><div class="amount" id="a-encoff">0.00</div></div>
+      <div class="var-row"><div>DISC-NE <span class="sub" style="font-size:10px;color:var(--muted)">discr. + encroaching</span></div><div class="rate" id="r-dne">–</div><div><input type="number" id="q-dne" value="0" min="0" step="1"></div><div class="amount" id="a-dne">0.00</div></div>
+      <div class="var-row"><div>DISC-W <span class="sub" style="font-size:10px;color:var(--muted)">discr. + encr. from OFF</span></div><div class="rate" id="r-dw">–</div><div><input type="number" id="q-dw" value="0" min="0" step="1"></div><div class="amount" id="a-dw">0.00</div></div>
+
+      <div class="var-row subtotal"><div>Subtotale Extra Flying</div><div></div><div></div><div class="amount" id="sub-extra">0.00</div></div>
+
+      <h3>Altre voci operative</h3>
+      <div class="var-row"><div>Out-of-Base Duty <span class="sub" style="font-size:10px;color:var(--muted)">posizionamento</span></div><div class="rate" id="r-oob">–</div><div><input type="number" id="q-oob" value="0" min="0" step="1"></div><div class="amount" id="a-oob">0.00</div></div>
+      <div class="var-row"><div>Deadheading <span class="sub" style="font-size:10px;color:var(--muted)">duty ≥ 12h</span></div><div class="rate" id="r-dh">–</div><div><input type="number" id="q-dh" value="0" min="0" step="1"></div><div class="amount" id="a-dh">0.00</div></div>
+      <div class="var-row"><div>DA Daily Allowance <span class="sub" style="font-size:10px;color:var(--muted)">notte fuori base</span></div><div class="rate">30.00</div><div><input type="number" id="q-da" value="0" min="0" step="1"></div><div class="amount" id="a-da">0.00</div></div>
+      <div class="var-row"><div>Line Training Comp.</div><div class="rate">53.00</div><div><input type="number" id="q-lt" value="0" min="0" step="1"></div><div class="amount" id="a-lt">0.00</div></div>
+
+      <h3>🖥 Office Duty Compensation</h3>
+      <div class="var-row"><div>Cat.1 <span class="sub" style="font-size:10px;color:var(--muted)">SFO ufficio / safety pilot / ASIM</span></div><div class="rate">158.00</div><div><input type="number" id="q-c1" value="0" min="0" step="1"></div><div class="amount" id="a-c1">0.00</div></div>
+      <div class="var-row"><div>Cat.2 <span class="sub" style="font-size:10px;color:var(--muted)">SFO ground e SIM training</span></div><div class="rate">210.00</div><div><input type="number" id="q-c2" value="0" min="0" step="1"></div><div class="amount" id="a-c2">0.00</div></div>
+      <div class="var-row"><div>Cat.3 <span class="sub" style="font-size:10px;color:var(--muted)">CPT ufficio / CPT ASIM</span></div><div class="rate">315.00</div><div><input type="number" id="q-c3" value="0" min="0" step="1"></div><div class="amount" id="a-c3">0.00</div></div>
+      <div class="var-row"><div>Cat.4 <span class="sub" style="font-size:10px;color:var(--muted)">CPT ground e SIM training</span></div><div class="rate">420.00</div><div><input type="number" id="q-c4" value="0" min="0" step="1"></div><div class="amount" id="a-c4">0.00</div></div>
+      <div class="var-row"><div>Cat.5 <span class="sub" style="font-size:10px;color:var(--muted)">CPT SIM check / LT / Tech Flight</span></div><div class="rate">630.00</div><div><input type="number" id="q-c5" value="0" min="0" step="1"></div><div class="amount" id="a-c5">0.00</div></div>
+
+      <div class="var-row subtotal"><div>TOTALE VOCI VARIABILI</div><div></div><div></div><div class="amount" id="sub-var">0.00</div></div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: OUTPUTS -->
+  <div>
+    <!-- 3. Stipendio base -->
+    <div class="card output">
+      <h2><span class="num">3</span> Stipendio Base Annuo</h2>
+
+      <div class="row"><span>Stipendio Base Annuo <span class="pill" id="contract-pill">TR</span></span><span class="val mono">€ <span id="sal-base">0</span></span></div>
+      <div class="row neg"><span>Bond <span class="sub" style="font-size:11px;color:var(--muted)">annuo</span></span><span class="val mono">− € <span id="bond-annual">0</span></span></div>
+      <div class="row"><span>Flex Roster Allowance</span><span class="val mono">€ <span id="flex-annual">0</span></span></div>
+      <div class="row"><span>Incremento Seniority <span class="sub" style="font-size:11px;color:var(--muted)">solo CPT</span></span><span class="val mono">€ <span id="sen-annual">0</span></span></div>
+      <div class="row" style="font-weight:600"><span>Totale Base Annuo</span><span class="val mono" style="color:var(--wizz-purple)">€ <span id="sal-annual">0</span></span></div>
+
+      <div class="bond-card">
+        <h3>BOND Progression</h3>
+        <div class="bond-grid">
+          <div class="lbl">Pagato fino a oggi</div><div class="v">€ <span id="bond-paid">0</span></div>
+          <div class="lbl">Da pagare</div><div class="v">€ <span id="bond-due">0</span></div>
+          <div class="lbl">Bonus fine bond</div><div class="v">€ <span id="bond-bonus">0</span></div>
+          <div class="lbl">Bonus month</div><div class="v" id="bond-month">–</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Riepilogo Mensile -->
+    <div class="card output" style="margin-top:20px">
+      <h2><span class="num">4</span> Riepilogo Mensile</h2>
+
+      <div class="row"><span>Stipendio Base Mensile <span class="sub" style="font-size:11px;color:var(--muted)">pro-rata giorni lavorati</span></span><span class="val mono">€ <span id="month-base">0</span></span></div>
+      <div class="row"><span>Totale Voci Variabili</span><span class="val mono">€ <span id="month-var">0</span></span></div>
+
+      <div class="row gross"><span class="label">Totale Lordo Mensile</span><span class="val"><span id="month-gross">0</span><span class="cur">EUR</span></span></div>
+
+      <div class="row"><span>Contributo Social <span class="sub" style="font-size:11px;color:var(--muted)">9.5% su min(lordo, cap)</span></span><span class="val mono neg" style="color:var(--warn)">− € <span id="ded-social">0</span></span></div>
+      <div class="row"><span>Contributo Health <span class="sub" style="font-size:11px;color:var(--muted)">1.7% su lordo</span></span><span class="val mono neg" style="color:var(--warn)">− € <span id="ded-health">0</span></span></div>
+
+      <div class="row total"><span class="label">Totale Netto Mensile</span><span class="val"><span id="month-net">0</span><span class="cur">EUR</span></span></div>
+
+      <div class="row" style="margin-top:14px;font-size:12px;color:var(--muted)">
+        <span>Totale Lordo Annuo stimato</span><span class="val mono">€ <span id="year-gross">0</span></span>
+      </div>
+      <div class="row" style="font-size:12px;color:var(--muted)">
+        <span>Controvalore in ALL <span class="sub" style="font-size:11px">cambio EUR→ALL</span></span>
+        <span class="fx-row"><input type="number" id="fx" value="95.20" step="0.01">L <span class="val mono" style="margin-left:6px">= <span id="month-net-all">0</span> ALL</span></span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Workdays explanation -->
+<div class="modal-backdrop" id="modal-workdays">
+  <div class="modal" role="dialog" aria-labelledby="mw-title">
+    <h4 id="mw-title">Cosa sono i Workdays</h4>
+    <p>Il valore rappresenta i <strong>giorni lavorativi statutari ufficiali</strong> del mese — ovvero la base usata da Wizz Air per calcolare lo stipendio pro-rata. Non rispecchia i giorni effettivamente lavorati (che dipendono dal tuo roster).</p>
+    <p>Il valore precompilato deriva dal calendario pubblico albanese (Lun–Ven meno festività statutarie). Tuttavia <strong>Wizz potrebbe usare un numero diverso</strong> — ad esempio, alcune festività religiose come Bajrami i Madh non sempre vengono conteggiate.</p>
+    <p><strong>Conferma sempre il valore sulla tua busta paga ufficiale</strong> ("Nr. of statutory working days") e se differisce, modificalo manualmente qui.</p>
+    <button type="button" class="close-btn" data-close-modal>Ho capito</button>
+  </div>
+</div>
+
+<!-- Modal: Variable items period -->
+<div class="modal-backdrop" id="modal-period">
+  <div class="modal" role="dialog" aria-labelledby="mp-title">
+    <h4 id="mp-title">Periodo di riferimento voci variabili</h4>
+    <p>Le voci variabili (distance pay, landing pay, extra flying duties, office duty, ecc.) nella tua busta paga mensile <strong>non</strong> coprono il mese di calendario ma il cosiddetto <strong>cut-off period</strong>:</p>
+    <p style="background:#F6EEF4;padding:10px 14px;border-radius:8px;font-weight:600;color:var(--wizz-purple);text-align:center">Dal 21 del mese precedente al 20 del mese corrente</p>
+    <p>Esempio: nella busta paga di marzo trovi le attività svolte tra il <strong>21 febbraio e il 20 marzo</strong>. Tienilo a mente quando inserisci le quantità.</p>
+    <p style="font-size:12px;color:var(--muted)"><strong>⚠️ Attenzione:</strong> i piloti in contratto Training non hanno diritto a performance-related elements. Le voci variabili sono disabilitate in quel caso.</p>
+    <button type="button" class="close-btn" data-close-modal>Ho capito</button>
+  </div>
+</div>
+
+<!-- Info panel: salary, payslips, queries -->
+<div class="info-panel">
+  <div class="info-card">
+    <h3><span class="icon">💸</span> Salary Transfer</h3>
+    <ul>
+      <li>Gli stipendi vengono rilasciati entro il <strong>10 del mese</strong>.</li>
+      <li>Il pagamento viene erogato <strong>in ALL</strong> (Lek albanesi).</li>
+      <li>Per gli elementi retributivi espressi in EUR, si usa il <strong>tasso di cambio della Banca Nazionale del 20 del mese</strong> per la conversione EUR → ALL.</li>
+    </ul>
+  </div>
+
+  <div class="info-card">
+    <h3><span class="icon">📧</span> Payslips</h3>
+    <ul>
+      <li>Le buste paga vengono inviate via email dall'azienda di payroll poco dopo il rilascio degli stipendi.</li>
+      <li>I file sono <strong>protetti da password</strong>.<span class="tag-mini">N° Passaporto</span></li>
+    </ul>
+  </div>
+
+  <div class="info-card">
+    <h3><span class="icon">❓</span> Salary Queries</h3>
+    <ul>
+      <li>Per domande o segnalazioni relative allo stipendio, scrivi a:<br><a href="mailto:askhrpayroll@wizzair.com">askhrpayroll@wizzair.com</a></li>
+    </ul>
+  </div>
+</div>
+
+<div class="footer-note">
+  <strong>⚠ Disclaimer</strong> — I valori sono indicativi. Le formule replicano il calcolatore Excel interno basato su <em>Pilot Compensation Overview DMAL Rev.1.0.0 – 01/07/2025</em>. Imposte sul reddito non incluse. I valori effettivi sono definiti nel contratto individuale. Le festività albanesi del 2027–2030 per Eid al-Fitr/Eid al-Adha sono stime astronomiche.<br>
+  <span style="opacity:0.7">v1.0 · Pronto per GitHub Pages · single-file HTML</span>
+</div>
+
+<script>
+// ============================================================
+// DATA TABLES — da 'Tabelle di Riferimento' dell'Excel
+// ============================================================
+
+const BASE_SALARY = {
+  'First Officer':        { Training: 12000, Regolare: 22050 },
+  'Senior First Officer': { Training: 13200, Regolare: 28120 },
+  'Captain':              { Training: 45000, Regolare: 49610 }
+};
+
+const SENIORITY_CPT = [
+  [1000,  0], [2000, 4410], [3000, 8820], [4000, 13230], [5000, 17640],
+  [6000, 22050], [8000, 26460], [10000, 30870], [12000, 35280], [Infinity, 39690]
+];
+
+const RATES_BY_POS = {
+  'First Officer':        { dist: 0.0254, land: 13.86, base: 32 },
+  'Senior First Officer': { dist: 0.0496, land: 24.85, base: 53 },
+  'Captain':              { dist: 0.0848, land: 41.01, base: 105 }
+};
+
+// Extra flying duty multipliers: multiplier of base hourly rate
+// Note: for CPT the ratios differ slightly (F-OFF=3×, DISC-OFF=4×, ENC-OFF=4×, DISC-W=5×)
+const EXTRA_DUTY = {
+  'AGRD':    { FO: 1, SFO: 1, CPT: 1 },
+  'F-OFF':   { FO: 4, SFO: 4, CPT: 3 },
+  'ENC-NEXT':{ FO: 1, SFO: 1, CPT: 1 },
+  'DISC-OFF':{ FO: 5, SFO: 5, CPT: 4 },
+  'ENC-OFF': { FO: 5, SFO: 5, CPT: 4 },
+  'DISC-NE': { FO: 2, SFO: 2, CPT: 2 },
+  'DISC-W':  { FO: 6, SFO: 6, CPT: 5 }
+};
+
+const BOND_TABLE = {
+  '2023 TR':       { monthly: 0,   duration: 0,  total: 0,     bonus: 0 },
+  '2023 TR RAP':   { monthly: 500, duration: 20, total: 10000, bonus: 5000 },
+  '2023 CCQ':      { monthly: 415, duration: 12, total: 5000,  bonus: 2500 },
+  '2023 NTR':      { monthly: 415, duration: 48, total: 20000, bonus: 10000 },
+  '2023 NTR RAP':  { monthly: 500, duration: 48, total: 24000, bonus: 12000 },
+  '2023 TR CDT':   { monthly: 415, duration: 12, total: 5000,  bonus: 2500 },
+  '2023 INT CDT':  { monthly: 415, duration: 48, total: 20000, bonus: 10000 },
+  '2023 APS MCC':  { monthly: 415, duration: 60, total: 25000, bonus: 12500 }
+};
+
+// Working days per month - from Excel for Albania 2026-2031
+// Key: "YYYY-MM" → working days (Mon-Fri, excluding Albanian public holidays)
+const WORKING_DAYS = {
+  "2026-01":21,"2026-02":20,"2026-03":21,"2026-04":22,"2026-05":19,"2026-06":22,
+  "2026-07":23,"2026-08":21,"2026-09":22,"2026-10":22,"2026-11":21,"2026-12":21,
+  "2027-01":20,"2027-02":20,"2027-03":21,"2027-04":22,"2027-05":21,"2027-06":22,
+  "2027-07":22,"2027-08":22,"2027-09":22,"2027-10":21,"2027-11":20,"2027-12":22,
+  "2028-01":21,"2028-02":21,"2028-03":21,"2028-04":20,"2028-05":21,"2028-06":22,
+  "2028-07":21,"2028-08":23,"2028-09":20,"2028-10":22,"2028-11":19,"2028-12":19,
+  "2029-01":21,"2029-02":19,"2029-03":20,"2029-04":20,"2029-05":22,"2029-06":21,
+  "2029-07":22,"2029-08":23,"2029-09":19,"2029-10":23,"2029-11":19,"2029-12":20,
+  "2030-01":21,"2030-02":19,"2030-03":19,"2030-04":22,"2030-05":22,"2030-06":20,
+  "2030-07":23,"2030-08":22,"2030-09":20,"2030-10":23,"2030-11":18,"2030-12":21,
+  "2031-01":23,"2031-02":20,"2031-03":21,"2031-04":22,"2031-05":22,"2031-06":21,
+  "2031-07":23,"2031-08":21,"2031-09":22,"2031-10":23,"2031-11":20,"2031-12":23
+};
+
+// Albania social security cap (monthly, in ALL)
+const SOCIAL_CAP_ALL = 186416;
+const RATE_SOCIAL = 0.095;
+const RATE_HEALTH = 0.017;
+const FLEX_ALLOWANCE_ANNUAL = { 'First Officer': 4800, 'Senior First Officer': 4800, 'Captain': 7200 };
+
+// ============================================================
+// HELPERS
+// ============================================================
+const $ = id => document.getElementById(id);
+const fmt = (n, dec=2) => {
+  if (!isFinite(n)) n = 0;
+  return n.toLocaleString('it-IT', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+};
+const fmt0 = n => fmt(n, 0);
+
+function posKey(p) {
+  if (p === 'First Officer') return 'FO';
+  if (p === 'Senior First Officer') return 'SFO';
+  return 'CPT';
+}
+
+function seniorityIncrement(hours) {
+  for (const [threshold, inc] of SENIORITY_CPT) {
+    if (hours < threshold) return inc;
+  }
+  return 0;
+}
+
+function monthKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth()+1).padStart(2,'0');
+  return `${y}-${m}`;
+}
+
+function monthLabel(date) {
+  return date.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+}
+
+function monthsBetween(from, to) {
+  return (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth());
+}
+
+// ============================================================
+// MONTH PICKER
+// ============================================================
+const monthSelect = $('month');
+Object.keys(WORKING_DAYS).sort().forEach(k => {
+  const [y, m] = k.split('-');
+  const d = new Date(+y, +m-1, 1);
+  const opt = document.createElement('option');
+  opt.value = k;
+  opt.textContent = monthLabel(d).replace(/^./, c => c.toUpperCase());
+  monthSelect.appendChild(opt);
+});
+// default: current month if available, otherwise first
+const today = new Date();
+const todayKey = monthKey(today);
+monthSelect.value = WORKING_DAYS[todayKey] ? todayKey : Object.keys(WORKING_DAYS)[4]; // 2026-05 fallback
+
+// Workdays input: default = calendar value, but user-editable
+const wdInput = $('wd-input');
+const wdReset = $('wd-reset');
+const monthPickerWrap = document.querySelector('.month-picker');
+
+function setWorkdaysFromCalendar() {
+  const k = monthSelect.value;
+  wdInput.value = WORKING_DAYS[k] ?? 22;
+  monthPickerWrap.classList.remove('wd-overridden');
+}
+function markOverriddenIfDiff() {
+  const k = monthSelect.value;
+  const cal = WORKING_DAYS[k];
+  if (cal && +wdInput.value !== cal) {
+    monthPickerWrap.classList.add('wd-overridden');
+  } else {
+    monthPickerWrap.classList.remove('wd-overridden');
+  }
+}
+monthSelect.addEventListener('change', () => { setWorkdaysFromCalendar(); calculate(); });
+wdReset.addEventListener('click', () => { setWorkdaysFromCalendar(); calculate(); });
+wdInput.addEventListener('input', () => { markOverriddenIfDiff(); calculate(); });
+setWorkdaysFromCalendar(); // initial
+
+// ============================================================
+// MAIN CALCULATION
+// ============================================================
+function calculate() {
+  const position = $('position').value;
+  const hours = +$('hours').value || 0;
+  const contract = $('contract').value;
+  const bondcode = $('bondcode').value;
+  const flex = $('flex').checked;
+  const fcrDate = new Date($('fcrdate').value);
+  const monthK = $('month').value;
+  const [yy, mm] = monthK.split('-').map(Number);
+  const selectedDate = new Date(yy, mm-1, 1);
+  const wd = Math.max(1, +wdInput.value || WORKING_DAYS[monthK] || 22);
+
+  const pk = posKey(position);
+  const posRates = RATES_BY_POS[position];
+
+  // --- STIPENDIO BASE ANNUO ---
+  const baseAnnual = BASE_SALARY[position][contract];
+  const seniority = (position === 'Captain') ? seniorityIncrement(hours) : 0;
+  const flexAllowance = flex ? FLEX_ALLOWANCE_ANNUAL[position] : 0;
+
+  // --- BOND ---
+  const bond = BOND_TABLE[bondcode];
+  const bondMonthly = (contract === 'Regolare') ? bond.monthly : 0;
+  const bondAnnual = bondMonthly * 12;
+
+  // Totale Base Annuo (con bond sottratto, flex e seniority aggiunti)
+  const totalAnnual = baseAnnual - bondAnnual + flexAllowance + seniority;
+  const totalMonthlyFull = totalAnnual / 12;
+
+  // --- BOND PROGRESSION ---
+  let bondPaid = 0, bondDue = 0, bondMonthLabel = '–';
+  if (bond.duration > 0 && !isNaN(fcrDate.getTime())) {
+    const now = new Date();
+    const monthsPassed = monthsBetween(fcrDate, now) - 1;
+    bondPaid = Math.max(0, Math.min(monthsPassed * bondMonthly, bond.total));
+    bondDue = Math.max(0, bond.total - bondPaid);
+    const bonusDate = new Date(fcrDate);
+    bonusDate.setMonth(bonusDate.getMonth() + bond.duration + 1);
+    bondMonthLabel = monthLabel(bonusDate).replace(/^./, c => c.toUpperCase());
+  }
+
+  // --- VOCI VARIABILI ---
+  // Daily rate (usata per sick/hp)
+  const monthlyBaseGross = baseAnnual / 12; // lordo pre-bond
+  const dailyRate = monthlyBaseGross / wd;
+  const sickRate = dailyRate * 0.8; // 80%
+  const hpRate = dailyRate;
+
+  // Update rates in UI
+  $('r-dist').textContent = posRates.dist.toFixed(4);
+  $('r-land').textContent = posRates.land.toFixed(2);
+  $('r-sick').textContent = sickRate.toFixed(2);
+  $('r-hp').textContent = hpRate.toFixed(2);
+
+  const baseMult = posRates.base;
+  const rates = {
+    agrd: EXTRA_DUTY['AGRD'][pk] * baseMult,
+    foff: EXTRA_DUTY['F-OFF'][pk] * baseMult,
+    encn: EXTRA_DUTY['ENC-NEXT'][pk] * baseMult,
+    doff: EXTRA_DUTY['DISC-OFF'][pk] * baseMult,
+    encoff: EXTRA_DUTY['ENC-OFF'][pk] * baseMult,
+    dne: EXTRA_DUTY['DISC-NE'][pk] * baseMult,
+    dw: EXTRA_DUTY['DISC-W'][pk] * baseMult,
+    oob: baseMult,
+    dh: baseMult
+  };
+  $('r-agrd').textContent = rates.agrd.toFixed(2);
+  $('r-foff').textContent = rates.foff.toFixed(2);
+  $('r-encn').textContent = rates.encn.toFixed(2);
+  $('r-doff').textContent = rates.doff.toFixed(2);
+  $('r-encoff').textContent = rates.encoff.toFixed(2);
+  $('r-dne').textContent = rates.dne.toFixed(2);
+  $('r-dw').textContent = rates.dw.toFixed(2);
+  $('r-oob').textContent = rates.oob.toFixed(2);
+  $('r-dh').textContent = rates.dh.toFixed(2);
+
+  // Read quantities
+  const q = id => +$('q-'+id).value || 0;
+  const qDist = q('dist'), qLand = q('land'), qSick = q('sick'), qHp = q('hp');
+  const qAgrd = q('agrd'), qFoff = q('foff'), qEncn = q('encn'), qDoff = q('doff');
+  const qEncoff = q('encoff'), qDne = q('dne'), qDw = q('dw');
+  const qOob = q('oob'), qDh = q('dh'), qDa = q('da'), qLt = q('lt');
+  const qC1 = q('c1'), qC2 = q('c2'), qC3 = q('c3'), qC4 = q('c4'), qC5 = q('c5');
+
+  // Amounts
+  const aDist = qDist * posRates.dist;
+  const aLand = qLand * posRates.land;
+  const aSick = qSick * sickRate;
+  const aHp = qHp * hpRate;
+  const aAgrd = qAgrd * rates.agrd;
+  const aFoff = qFoff * rates.foff;
+  const aEncn = qEncn * rates.encn;
+  const aDoff = qDoff * rates.doff;
+  const aEncoff = qEncoff * rates.encoff;
+  const aDne = qDne * rates.dne;
+  const aDw = qDw * rates.dw;
+  const aOob = qOob * rates.oob;
+  const aDh = qDh * rates.dh;
+  const aDa = qDa * 30;
+  const aLt = qLt * 53;
+  const aC1 = qC1*158, aC2 = qC2*210, aC3 = qC3*315, aC4 = qC4*420, aC5 = qC5*630;
+
+  $('a-dist').textContent = fmt(aDist);
+  $('a-land').textContent = fmt(aLand);
+  $('a-sick').textContent = fmt(aSick);
+  $('a-hp').textContent = fmt(aHp);
+  $('a-agrd').textContent = fmt(aAgrd);
+  $('a-foff').textContent = fmt(aFoff);
+  $('a-encn').textContent = fmt(aEncn);
+  $('a-doff').textContent = fmt(aDoff);
+  $('a-encoff').textContent = fmt(aEncoff);
+  $('a-dne').textContent = fmt(aDne);
+  $('a-dw').textContent = fmt(aDw);
+  $('a-oob').textContent = fmt(aOob);
+  $('a-dh').textContent = fmt(aDh);
+  $('a-da').textContent = fmt(aDa);
+  $('a-lt').textContent = fmt(aLt);
+  $('a-c1').textContent = fmt(aC1);
+  $('a-c2').textContent = fmt(aC2);
+  $('a-c3').textContent = fmt(aC3);
+  $('a-c4').textContent = fmt(aC4);
+  $('a-c5').textContent = fmt(aC5);
+
+  const subExtra = aAgrd + aFoff + aEncn + aDoff + aEncoff + aDne + aDw;
+  $('sub-extra').textContent = fmt(subExtra);
+
+  const totalVariable = aDist + aLand + aSick + aHp + subExtra +
+                        aOob + aDh + aDa + aLt +
+                        aC1 + aC2 + aC3 + aC4 + aC5;
+  $('sub-var').textContent = fmt(totalVariable);
+
+  // --- STIPENDIO MENSILE PRO-RATA ---
+  // Formula Excel: D13 = ((C13/12)/C2)*(C2-D23-D24)
+  // Base mensile effettivo = dailyRate * (workdays - sickDays - hpDays)
+  // (perché sick è pagato separatamente all'80% e HP al 100% come voce variabile,
+  //  quindi si scala il base gross)
+  const effectiveWorkdays = Math.max(0, wd - qSick - qHp);
+  const monthBase = (dailyRate * effectiveWorkdays) - bondMonthly + (flexAllowance/12) + (seniority/12);
+
+  const monthGross = monthBase + totalVariable;
+
+  // --- TAX (contributi) ---
+  const fx = +$('fx').value || 95.20;
+  const grossALL = monthGross * fx;
+  const socialBaseALL = Math.min(grossALL, SOCIAL_CAP_ALL);
+  const dedSocialALL = socialBaseALL * RATE_SOCIAL;
+  const dedHealthALL = grossALL * RATE_HEALTH;
+  const dedSocialEUR = dedSocialALL / fx;
+  const dedHealthEUR = dedHealthALL / fx;
+  const monthNet = monthGross - dedSocialEUR - dedHealthEUR;
+  const monthNetALL = monthNet * fx;
+
+  // --- UI OUTPUT ---
+  $('contract-pill').textContent = contract === 'Training' ? 'TR' : 'REG';
+  $('sal-base').textContent = fmt0(baseAnnual);
+  $('bond-annual').textContent = fmt0(bondAnnual);
+  $('flex-annual').textContent = fmt0(flexAllowance);
+  $('sen-annual').textContent = fmt0(seniority);
+  $('sal-annual').textContent = fmt0(totalAnnual);
+
+  $('bond-paid').textContent = fmt0(bondPaid);
+  $('bond-due').textContent = fmt0(bondDue);
+  $('bond-bonus').textContent = fmt0(bond.bonus);
+  $('bond-month').textContent = bondMonthLabel;
+
+  $('month-base').textContent = fmt(monthBase);
+  $('month-var').textContent = fmt(totalVariable);
+  $('month-gross').textContent = fmt(monthGross);
+  $('ded-social').textContent = fmt(dedSocialEUR);
+  $('ded-health').textContent = fmt(dedHealthEUR);
+  $('month-net').textContent = fmt(monthNet);
+  $('year-gross').textContent = fmt0(monthGross * 12);
+  $('month-net-all').textContent = fmt0(monthNetALL);
+}
+
+// ============================================================
+// BIND EVENTS
+// ============================================================
+document.querySelectorAll('input, select').forEach(el => {
+  el.addEventListener('input', calculate);
+  el.addEventListener('change', calculate);
+});
+
+// Clear default "0" when focusing quantity inputs (mobile UX);
+// restore "0" on blur if left empty
+document.querySelectorAll('.var-row input[type="number"], #hours').forEach(el => {
+  el.addEventListener('focus', () => { if (el.value === '0') el.value = ''; });
+  el.addEventListener('blur',  () => { if (el.value === '')   el.value = '0'; });
+});
+
+// --- Training contract lock: zero out variable items and disable inputs ---
+const variablesCard = document.getElementById('variables-card');
+const contractSelect = document.getElementById('contract');
+function applyTrainingLock() {
+  const isTraining = contractSelect.value === 'Training';
+  variablesCard.classList.toggle('locked', isTraining);
+  document.querySelectorAll('.var-row input[type="number"]').forEach(inp => {
+    if (isTraining) {
+      inp.value = '0';
+      inp.disabled = true;
+    } else {
+      inp.disabled = false;
+    }
+  });
+  calculate();
+}
+contractSelect.addEventListener('change', applyTrainingLock);
+applyTrainingLock(); // apply on load
+
+// --- Modal open/close logic ---
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(el) {
+  el.classList.remove('open');
+}
+document.getElementById('help-workdays').addEventListener('click', e => {
+  e.preventDefault(); openModal('modal-workdays');
+});
+document.getElementById('help-period').addEventListener('click', e => {
+  e.preventDefault(); openModal('modal-period');
+});
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+  bd.addEventListener('click', e => {
+    if (e.target === bd || e.target.hasAttribute('data-close-modal')) {
+      closeModal(bd);
+    }
+  });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.open').forEach(closeModal);
+});
+
+// Mobile only: compact header on scroll (hide title, keep picker)
+let wasScrolled = false;
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY > 60;
+  if (scrolled !== wasScrolled) {
+    document.body.classList.toggle('scrolled', scrolled);
+    wasScrolled = scrolled;
+  }
+}, { passive: true });
+
+calculate();
+</script>
+
+</body>
+</html>
